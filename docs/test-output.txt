@@ -1,0 +1,32 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.7.0 -- C:\Users\aarus\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\aarus\AppData\Roaming\Claude\scratch-workspaces\12c73c9e-10e3-40a6-89d6-aca2fb3f621e\68898445-a592-4c39-bc76-5345f49c8404\scratch-2026-10-19-fb1f4e\Cerevyn-Chitkara-RollNumber-PS07
+plugins: anyio-4.15.1
+collecting ... collected 17 items
+
+tests/test_api.py::test_dashboard_and_health PASSED                      [  5%]
+tests/test_api.py::test_sample_endpoint_returns_result_images_and_csv PASSED [ 11%]
+tests/test_api.py::test_threshold_parameter_changes_verdict_and_bad_values_422 PASSED [ 17%]
+tests/test_api.py::test_upload_valid_npz_and_rejections PASSED           [ 23%]
+tests/test_api.py::test_downloads PASSED                                 [ 29%]
+tests/test_api.py::test_cli_writes_outputs PASSED                        [ 35%]
+tests/test_core.py::test_known_value_nir_06_red_02_is_05 PASSED          [ 41%]
+tests/test_core.py::test_zero_denominator_is_nan_not_zero_and_counted PASSED [ 47%]
+tests/test_core.py::test_masked_negative_and_nan_pixels_have_no_value PASSED [ 52%]
+tests/test_core.py::test_fully_masked_farm_is_insufficient_not_a_number PASSED [ 58%]
+tests/test_core.py::test_different_cloud_masks_use_only_pixels_valid_on_both_dates PASSED [ 64%]
+tests/test_core.py::test_pixels_outside_farm_are_ignored PASSED          [ 70%]
+tests/test_core.py::test_decline_flag_respects_configurable_threshold PASSED [ 76%]
+tests/test_core.py::test_low_coverage_blocks_verdict PASSED              [ 82%]
+tests/test_core.py::test_shape_mismatch_and_empty_farm_are_rejected PASSED [ 88%]
+tests/test_core.py::test_sample_matches_hand_derived_numbers_and_stored_expectation PASSED [ 94%]
+tests/test_core.py::test_sample_generation_is_reproducible PASSED        [100%]
+
+============================== warnings summary ===============================
+..\..\..\..\..\..\..\Local\Programs\Python\Python312\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\aarus\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 17 passed, 1 warning in 3.19s ========================

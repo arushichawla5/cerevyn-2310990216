@@ -1,0 +1,96 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vegetation Change Monitor</title>
+<style>
+  :root { --bg:#fafaf7; --fg:#1d2420; --mut:#5d665f; --card:#fff; --line:#dcdfd8; --acc:#2f6b3a; --warn:#a4372a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161a17; --fg:#e8ece8; --mut:#9aa59c; --card:#1f2521; --line:#323a34; --acc:#7cc48a; --warn:#f08a7c; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui,sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 4px; } p.sub { color:var(--mut); margin:0 0 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:16px; }
+  form { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:end; }
+  label { display:flex; flex-direction:column; font-size:13px; color:var(--mut); gap:4px; }
+  input[type=number] { width:110px; padding:6px; background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:4px; }
+  button { padding:8px 14px; border:0; border-radius:4px; background:var(--acc); color:#fff; font-weight:600; cursor:pointer; }
+  .imgs { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+  figure { margin:0; } img { width:100%; image-rendering:pixelated; border:1px solid var(--line); border-radius:4px; }
+  figcaption { font-size:13px; color:var(--mut); margin-top:4px; }
+  table { border-collapse:collapse; width:100%; } td,th { text-align:left; padding:4px 8px; border-bottom:1px solid var(--line); font-size:14px; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:12px; font-weight:600; border:1px solid currentColor; }
+  .decline_flagged { color:var(--warn); } .no_decline_flagged { color:var(--acc); } .insufficient_data { color:var(--mut); }
+  .note { font-size:13px; color:var(--mut); } #err { color:var(--warn); }
+  .legend span { display:inline-block; width:12px; height:12px; vertical-align:middle; margin:0 4px 0 12px; border:1px solid var(--line); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Satellite Vegetation Change Monitor</h1>
+  <p class="sub">NDVI comparison of one farm across two dates. Sample data is <strong>synthetic</strong>.</p>
+
+  <div class="card">
+    <form id="f">
+      <label>Decline threshold (mean change)<input type="number" step="0.01" min="0.01" max="2" id="dt" value="0.05"></label>
+      <label>Pixel decline threshold<input type="number" step="0.01" min="0.01" max="2" id="pt" value="0.10"></label>
+      <label>Min usable fraction<input type="number" step="0.05" min="0" max="1" id="mu" value="0.50"></label>
+      <label>Or upload .npz<input type="file" id="file" accept=".npz"></label>
+      <button type="submit">Analyse</button>
+    </form>
+    <p id="err"></p>
+  </div>
+
+  <div id="out" hidden>
+    <div class="card"><strong>Verdict:</strong> <span id="badge" class="badge"></span> <span id="why"></span></div>
+    <div class="card"><div class="imgs">
+      <figure><img id="i1" alt="NDVI date 1"><figcaption id="c1"></figcaption></figure>
+      <figure><img id="i2" alt="NDVI date 2"><figcaption id="c2"></figcaption></figure>
+      <figure><img id="ic" alt="NDVI change"><figcaption>Change (date 2 âˆ’ date 1): dark = decline, mid-gray = none, light = increase</figcaption></figure>
+    </div>
+    <p class="legend note">Legend:<span style="background:#c83cc8"></span>on farm, no NDVI value (cloud / invalid / zero denominator)<span style="background:#181820"></span>outside farm</p></div>
+    <div class="card"><table id="t"></table></div>
+    <div class="card"><a id="dj" download="results.json">Download results.json</a> Â· <a id="dc" download="change.csv">Download change.csv</a> Â· <a id="dp" download="change.png">Download change.png</a></div>
+    <p class="note" id="disc"></p>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const pct = x => x == null ? "n/a" : x + "%";
+function show(d) {
+  const r = d.result, c = r.comparison;
+  $("out").hidden = false;
+  $("badge").textContent = c.status.replace(/_/g, " "); $("badge").className = "badge " + c.status;
+  $("why").textContent = c.status_reason;
+  for (const [id, k, cap] of [["i1","date1","c1"],["i2","date2","c2"]])
+    { $(id).src = "data:image/png;base64," + d.images[k];
+      $(cap).textContent = k.replace("date","Date ") + " NDVI â€” valid coverage " + pct(r[k].valid_coverage_pct) + ", mean " + (r[k].mean_ndvi_own_valid_pixels ?? "n/a"); }
+  $("ic").src = "data:image/png;base64," + d.images.change;
+  const rows = [
+    ["Mean NDVI date 1 (comparison pixels)", c.mean_ndvi_date1], ["Mean NDVI date 2 (comparison pixels)", c.mean_ndvi_date2],
+    ["Mean change", c.mean_change], ["Usable pixels (valid on both dates)", c.usable_pixels],
+    ["Usable % of farm", pct(c.usable_pct_of_farm)], ["Declined pixels", c.declined_pixels + " (" + pct(c.declined_pct_of_usable) + " of usable)"],
+    ["Date 1 excluded (masked / bad / zero denom.)", `${r.date1.excluded_masked} / ${r.date1.excluded_bad_value} / ${r.date1.excluded_zero_denominator}`],
+    ["Date 2 excluded (masked / bad / zero denom.)", `${r.date2.excluded_masked} / ${r.date2.excluded_bad_value} / ${r.date2.excluded_zero_denominator}`],
+  ];
+  $("t").innerHTML = rows.map(([a, b]) => `<tr><th>${a}</th><td>${b ?? "n/a"}</td></tr>`).join("");
+  $("dj").href = "data:application/json," + encodeURIComponent(JSON.stringify(r, null, 2));
+  $("dc").href = "data:text/csv," + encodeURIComponent(d.csv);
+  $("dp").href = "data:image/png;base64," + d.images.change;
+  $("disc").textContent = r.interpretation_note;
+}
+$("f").addEventListener("submit", async e => {
+  e.preventDefault(); $("err").textContent = "";
+  const q = `decline_threshold=${$("dt").value}&pixel_decline_threshold=${$("pt").value}&min_usable_fraction=${$("mu").value}`;
+  const f = $("file").files[0];
+  try {
+    const res = f ? await fetch("/api/analyze?" + q, { method: "POST", body: await f.arrayBuffer() }) : await fetch("/api/sample?" + q);
+    const body = await res.json();
+    if (!res.ok) throw new Error(typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail));
+    show(body);
+  } catch (err) { $("err").textContent = "Error: " + err.message; }
+});
+$("f").requestSubmit();
+</script>
+</body>
+</html>

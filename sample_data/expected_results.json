@@ -1,0 +1,38 @@
+{
+  "config": {
+    "decline_threshold": 0.05,
+    "pixel_decline_threshold": 0.1,
+    "min_usable_fraction": 0.5
+  },
+  "date1": {
+    "farm_pixels": 240,
+    "valid_pixels": 219,
+    "valid_coverage_pct": 91.25,
+    "mean_ndvi_own_valid_pixels": 0.6969,
+    "excluded_masked": 20,
+    "excluded_bad_value": 0,
+    "excluded_zero_denominator": 1
+  },
+  "date2": {
+    "farm_pixels": 240,
+    "valid_pixels": 220,
+    "valid_coverage_pct": 91.67,
+    "mean_ndvi_own_valid_pixels": 0.6249,
+    "excluded_masked": 20,
+    "excluded_bad_value": 0,
+    "excluded_zero_denominator": 0
+  },
+  "comparison": {
+    "comparison_area": "farm pixels with an NDVI value on both dates",
+    "usable_pixels": 199,
+    "usable_pct_of_farm": 82.92,
+    "mean_ndvi_date1": 0.6971,
+    "mean_ndvi_date2": 0.6186,
+    "mean_change": -0.0785,
+    "declined_pixels": 36,
+    "declined_pct_of_usable": 18.09,
+    "status": "decline_flagged",
+    "status_reason": "Mean NDVI change -0.079 is at or below -0.05."
+  },
+  "interpretation_note": "A decline in NDVI is a change in measured reflectance. It does not by itself establish disease, pest damage, drought, management activity or yield loss; clouds, haze, sun angle, sensor differences and seasonal growth stage can all change NDVI. Treat a flag as a prompt for field verification."
+}
